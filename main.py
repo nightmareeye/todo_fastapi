@@ -1,6 +1,14 @@
 from typing import Union
 from enum import Enum
 from fastapi import FastAPI
+from pydantic import BaseModel
+from TodoJournal import TodoJournal
+
+
+class Todo(BaseModel):
+    path: str
+    name: str
+    todo: Union[str, None] = None
 
 
 class ModelName(str, Enum):
@@ -8,6 +16,8 @@ class ModelName(str, Enum):
     resnet = "resnet"
     lenet = "lenet"
 
+
+fake_items_db = [{"item_name": "Foo"}, {"item_name": "Bar"}, {"item_name": "Baz"}]
 
 app = FastAPI()
 
@@ -20,6 +30,12 @@ async def read_item(item_id: Union[int, str] = int, q: Union[str, None] = None):
     return {"item_id": item_id, "q": q}
 
 
+@app.post("/todo")
+async def create_todo(obj: Todo):
+    TodoJournal.create(obj.path, obj.name)
+    return {"Created todo": obj.name, "at": obj.path}
+
+
 @app.get("/models/{model_name}")
 async def get_model(model_name: ModelName):
     if model_name is ModelName.alexnet:
@@ -29,9 +45,6 @@ async def get_model(model_name: ModelName):
         return {"model_name": model_name, "message": "LeCNN all the images"}
 
     return {"model_name": model_name, "message": "Have some residuals"}
-
-
-fake_items_db = [{"item_name": "Foo"}, {"item_name": "Bar"}, {"item_name": "Baz"}]
 
 
 @app.get("/itemsss/")
