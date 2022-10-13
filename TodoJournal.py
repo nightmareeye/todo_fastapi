@@ -145,6 +145,7 @@ class TodoJournal:
             out += f"{i + 1}: {self.entries[i]}\n"
         out += '=' * (20+len(self.name))
         print(out)
+        return out
 
     def __getattr__(self, item):
         index = self.shortcut_names.get(item, None)

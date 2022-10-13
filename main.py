@@ -1,4 +1,4 @@
-#from typing import Union
+# from typing import Union
 from enum import Enum
 from fastapi import FastAPI
 from pydantic import BaseModel
@@ -7,12 +7,12 @@ from TodoJournal import TodoJournal
 
 class TodoStr(BaseModel):
     todo: str
-    #index: int | None = None
+    # index: int | None = None
 
 
 class TodoJrnl(BaseModel):
     path: str
-    name: str
+    name: str | None = None
     todos: list[TodoStr] | None = None
 
 
@@ -57,12 +57,25 @@ async def create_todo(obj: TodoJrnl):
     file = TodoJournal(obj.path)
     if obj.todos is not None:
         for i in obj.todos:
-            file.add_todo(i)
+            file.add_todo(i.todo)
     return {"Created todo": obj.name, "at": obj.path}
 
 
 @app.post("/todo/add")
 async def add_todo(obj: TodoJrnl, elem: TodoStr):
     file = TodoJournal(obj.path)
-    file.add_todo(elem)
+    file.add_todo(elem.todo)
     return {"Added todo: ": elem, ", to journal: ": obj.name}
+
+
+@app.put("/todo/remove")
+async def remove_todo(obj: TodoJrnl, elem: int):
+    file = TodoJournal(obj.path)
+    file.remove_todo(elem - 1)
+    return {"Removed todo: ": elem - 1, ", from journal: ": obj.name}
+
+
+@app.get("/todo/{todo_jrnl}")
+async def show_todo(todo_jrnl: str):
+    file = TodoJournal(todo_jrnl)
+    return { TodoJournal.print(file) }
