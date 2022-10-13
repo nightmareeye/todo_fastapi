@@ -78,4 +78,4 @@ async def remove_todo(obj: TodoJrnl, elem: int):
 @app.get("/todo/{todo_jrnl}")
 async def show_todo(todo_jrnl: str):
     file = TodoJournal(todo_jrnl)
-    return { TodoJournal.print(file) }
+    return {TodoJournal.print(file)}
