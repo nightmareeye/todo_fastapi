@@ -15,6 +15,25 @@ class TodoJrnl(BaseModel):
     name: str | None = Query(default=None, min_length=3, max_length=50)
     todos: list[TodoStr] | None = None
 
+    class Config:
+        schema_extra = {
+            "example": {
+                "path": "testlist",
+                "name": "My awesome todo list",
+                "todos": [
+                    {
+                        "todo": "useless string1"
+                    },
+                    {
+                        "todo": "useless string2"
+                    }, {
+                        "todo": "useless string3"
+                    }
+                ]
+            }
+
+        }
+
 
 class ModelName(str, Enum):
     alexnet = "alexnet"
@@ -80,9 +99,10 @@ async def show_todo_journal(todo_jrnl: str):
     file = TodoJournal(todo_jrnl)
     return {TodoJournal.print(file)}
 
+
 @app.post("/todo/{todo_jrnl}")
 async def replace_todo(todo_jrnl: str, q: int, ent: TodoStr):
     file = TodoJournal(todo_jrnl)
     file.remove_todo(q)
     file.add_todo(ent.todo)
-    return {"Replaced todo with index": q, "to": ent, "in journal": todo_jrnl }
+    return {"Replaced todo with index": q, "to": ent, "in journal": todo_jrnl}
