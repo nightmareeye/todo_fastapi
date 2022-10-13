@@ -1,6 +1,7 @@
 # from typing import Union
+import os.path
 from enum import Enum
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, Response
 from pydantic import BaseModel
 from TodoJournal import TodoJournal
 
@@ -65,7 +66,7 @@ async def read_item(item_id: int | str = int, q: str | None = None):
     return {"item_id": item_id, "q": q}
 
 
-@app.get("/itemsss/")
+@app.get("/items_of_fake_db/")
 async def read_item(skip: int = 0, limit: int = 10):
     return fake_items_db[skip: skip + limit]
 
@@ -94,14 +95,20 @@ async def remove_todo(obj: TodoJrnl, elem: int):
     return {"Removed todo": elem, ", from journal": obj.name}
 
 
-@app.get("/todo/{todo_jrnl}")
-async def show_todo_journal(todo_jrnl: str):
+@app.get("/todo/{todo_jrnl}", status_code=200)
+async def show_todo_journal(todo_jrnl: str, response: Response):
+    if not os.path.exists(todo_jrnl):
+        response.status_code = 418
+        return {"message": "TodoJournal's file not found, drink a tea instead"}
     file = TodoJournal(todo_jrnl)
     return {TodoJournal.print(file)}
 
 
-@app.post("/todo/{todo_jrnl}")
-async def replace_todo(todo_jrnl: str, q: int, ent: TodoStr):
+@app.post("/todo/{todo_jrnl}", status_code=200)
+async def replace_todo(todo_jrnl: str, q: int, ent: TodoStr, response: Response):
+    if not os.path.exists(todo_jrnl):
+        response.status_code = 404
+        return {"message": "TodoJournal's file not found"}
     file = TodoJournal(todo_jrnl)
     file.remove_todo(q)
     file.add_todo(ent.todo)
