@@ -1,6 +1,6 @@
 # from typing import Union
 from enum import Enum
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
 from pydantic import BaseModel
 from TodoJournal import TodoJournal
 
@@ -12,7 +12,7 @@ class TodoStr(BaseModel):
 
 class TodoJrnl(BaseModel):
     path: str
-    name: str | None = None
+    name: str | None = Query(default=None, min_length=3, max_length=50)
     todos: list[TodoStr] | None = None
 
 
@@ -71,11 +71,18 @@ async def add_todo(obj: TodoJrnl, elem: TodoStr):
 @app.put("/todo/remove")
 async def remove_todo(obj: TodoJrnl, elem: int):
     file = TodoJournal(obj.path)
-    file.remove_todo(elem - 1)
-    return {"Removed todo: ": elem - 1, ", from journal: ": obj.name}
+    file.remove_todo(elem)
+    return {"Removed todo": elem, ", from journal": obj.name}
 
 
 @app.get("/todo/{todo_jrnl}")
-async def show_todo(todo_jrnl: str):
+async def show_todo_journal(todo_jrnl: str):
     file = TodoJournal(todo_jrnl)
     return {TodoJournal.print(file)}
+
+@app.post("/todo/{todo_jrnl}")
+async def replace_todo(todo_jrnl: str, q: int, ent: TodoStr):
+    file = TodoJournal(todo_jrnl)
+    file.remove_todo(q)
+    file.add_todo(ent.todo)
+    return {"Replaced todo with index": q, "to": ent, "in journal": todo_jrnl }
