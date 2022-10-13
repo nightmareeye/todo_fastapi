@@ -8,10 +8,6 @@ def read_from_file(path_to_file):
         for line in file_.readlines():
             yield line
 
-        # Kudrin-style
-        # while line := file_.readline():
-        #     yield line
-
 def main():
     """
     Start of application
