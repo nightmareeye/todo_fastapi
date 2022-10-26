@@ -29,7 +29,7 @@ class TodoJrnl(BaseModel):
     name: str | None = Query(default=None, min_length=3, max_length=50)
     todos: list[TodoOut] | None = None
 
-    """class Config:
+    class Config:
         schema_extra = {
             "example": {
                 "path": "testlist",
@@ -46,7 +46,7 @@ class TodoJrnl(BaseModel):
                 ]
             }
 
-        }"""
+        }
 
 
 class ModelName(str, Enum):
@@ -94,7 +94,7 @@ async def create_todo(obj: TodoJrnl):
     return {"Created todo": obj.name, "at": obj.path}
 
 
-@app.post("/todo/add", response_model=TodoOut)
+@app.post("/todo/add", response_model=TodoOut, response_model_include=["ID","date_created"])
 async def add_todo(obj: TodoJrnl, elem: TodoIn):
     file = TodoJournal(obj.path)
     #kid = TodoOut(elem)
@@ -130,7 +130,7 @@ async def replace_todo(todo_jrnl: str, q: int, ent: TodoIn, response: Response):
     return {"Replaced todo with index": q, "to": ent, "in journal": todo_jrnl}
 
 
-@app.post("/todo/properites_info", response_model=TodoOut)
+@app.post("/todo/properites_info", response_model=TodoOut, response_model_include=["ID","date_created"])
 async def info_of_todo(todo_in: TodoIn):
     if todo_in.text is None:
         todo_in.text = "There was no text"

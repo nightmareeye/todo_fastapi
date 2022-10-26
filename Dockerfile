@@ -4,7 +4,7 @@ WORKDIR /todo_fast
 
 COPY ./requirements.txt /todo_fast/requirements.txt
 
-RUN pip install --no-cache-dir --upgrade -r /todo_fast/requirements.txt
+RUN pip install --default-timeout=1000 --no-cache-dir --upgrade -r /todo_fast/requirements.txt
 
 COPY ./app /todo_fast/app
 
