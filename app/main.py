@@ -1,16 +1,17 @@
 # from typing import Union
 from datetime import date
 import os.path
+from os.path import exists
 from enum import Enum
-from fastapi import FastAPI, Query, Response
+from fastapi import FastAPI, Query, Response, Form, File, UploadFile, HTTPException
 from pydantic import BaseModel
 from app.TodoJournal import TodoJournal
-
 
 """class TodoStr(BaseModel):
     todo: str
     # index: int | None = None
 """
+
 
 class TodoIn(BaseModel):
     title: str
@@ -21,7 +22,6 @@ class TodoIn(BaseModel):
 class TodoOut(TodoIn):
     ID: int = 0
     date_created: str = date.today()
-
 
 
 class TodoJrnl(BaseModel):
@@ -72,7 +72,7 @@ async def get_model(model_name: ModelName):
 
 
 @app.get("/items/{item_id}")
-async def read_item(item_id: int | str = int, q: str | None = None):
+async def read_item(item_id: int, q: str | None = None):
     if item_id == "me":
         return "Hello there"
 
@@ -94,11 +94,13 @@ async def create_todo(obj: TodoJrnl):
     return {"Created todo": obj.name, "at": obj.path}
 
 
-@app.post("/todo/add", response_model=TodoOut, response_model_include=["ID","date_created"])
+@app.post("/todo/add", response_model=TodoOut, response_model_include=["ID", "date_created"])
 async def add_todo(obj: TodoJrnl, elem: TodoIn):
+    if not exists(obj.path):
+        raise HTTPException(status_code=404, detail="TodoJournal not found")
     file = TodoJournal(obj.path)
-    #kid = TodoOut(elem)
-    #obj.todos.append(kid)
+    # kid = TodoOut(elem)
+    # obj.todos.append(kid)
     file.add_todo(elem.title)
     return elem
 
@@ -130,10 +132,15 @@ async def replace_todo(todo_jrnl: str, q: int, ent: TodoIn, response: Response):
     return {"Replaced todo with index": q, "to": ent, "in journal": todo_jrnl}
 
 
-@app.post("/todo/properites_info", response_model=TodoOut, response_model_include=["ID","date_created"])
+@app.post("/todo/properites_info", response_model=TodoOut, response_model_include=["ID", "date_created"])
 async def info_of_todo(todo_in: TodoIn):
     if todo_in.text is None:
         todo_in.text = "There was no text"
     if todo_in.date_expire is None:
         todo_in.date_expire = "There was no date of exp"
     return todo_in
+
+
+@app.post("/uploadfiles/")
+async def create_upload_files(files: list[UploadFile]):
+    return {"filenames": [file.filename for file in files]}
