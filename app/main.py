@@ -13,6 +13,11 @@ from app.TodoJournal import TodoJournal
 """
 
 
+class Tags(Enum):
+    todoapp = "todoapp"
+    random = "random"
+
+
 class TodoIn(BaseModel):
     title: str
     text: str | None = None
@@ -60,7 +65,12 @@ fake_items_db = [{"item_name": "Foo"}, {"item_name": "Bar"}, {"item_name": "Baz"
 app = FastAPI()
 
 
-@app.get("/models/{model_name}")
+@app.get(
+    "/models/{model_name}",
+    summary="Models enum",
+    response_description="Enum example",
+    tags=[Tags.random]
+         )
 async def get_model(model_name: ModelName):
     if model_name is ModelName.alexnet:
         return {"model_name": model_name, "message": "Deep Learning FTW!"}
@@ -71,7 +81,12 @@ async def get_model(model_name: ModelName):
     return {"model_name": model_name, "message": "Have some residuals"}
 
 
-@app.get("/items/{item_id}")
+@app.get(
+    "/items/{item_id}",
+    summary="Items id",
+    response_description="Path, query params example",
+    tags=[Tags.random]
+)
 async def read_item(item_id: int, q: str | None = None):
     if item_id == "me":
         return "Hello there"
@@ -79,12 +94,22 @@ async def read_item(item_id: int, q: str | None = None):
     return {"item_id": item_id, "q": q}
 
 
-@app.get("/items_of_fake_db/")
+@app.get(
+    "/items_of_fake_db/",
+    summary="Fake database",
+    response_description="Example for skip, limit",
+    tags=[Tags.random]
+)
 async def read_item(skip: int = 0, limit: int = 10):
     return fake_items_db[skip: skip + limit]
 
 
-@app.post("/todo/create")
+@app.post(
+    "/todo/create",
+    summary="Create Journal",
+    response_description="Create Todo Journal",
+    tags=[Tags.todoapp]
+)
 async def create_todo(obj: TodoJrnl):
     TodoJournal.create(obj.path, obj.name)
     file = TodoJournal(obj.path)
@@ -94,7 +119,14 @@ async def create_todo(obj: TodoJrnl):
     return {"Created todo": obj.name, "at": obj.path}
 
 
-@app.post("/todo/add", response_model=TodoOut, response_model_include=["ID", "date_created"])
+@app.post(
+    "/todo/add",
+    summary="Add",
+    response_description="Add todo to journal",
+    tags=[Tags.todoapp],
+    response_model=TodoOut,
+    response_model_include=["ID", "date_created"]
+)
 async def add_todo(obj: TodoJrnl, elem: TodoIn):
     if not exists(obj.path):
         raise HTTPException(status_code=404, detail="TodoJournal not found")
@@ -105,14 +137,25 @@ async def add_todo(obj: TodoJrnl, elem: TodoIn):
     return elem
 
 
-@app.put("/todo/remove")
+@app.put(
+    "/todo/remove",
+    summary="Remove",
+    response_description="Remove todo from Journal",
+    tags=[Tags.todoapp]
+)
 async def remove_todo(obj: TodoJrnl, elem: int):
     file = TodoJournal(obj.path)
     file.remove_todo(elem)
     return {"Removed todo": elem, ", from journal": obj.name}
 
 
-@app.get("/todo/{todo_jrnl}", status_code=200)
+@app.get(
+    "/todo/{todo_jrnl}",
+    summary="Print",
+    response_description="Print TodoJournal",
+    tags=[Tags.todoapp],
+    status_code=200
+)
 async def show_todo_journal(todo_jrnl: str, response: Response):
     if not os.path.exists(todo_jrnl):
         response.status_code = 418
@@ -121,7 +164,13 @@ async def show_todo_journal(todo_jrnl: str, response: Response):
     return {TodoJournal.print(file)}
 
 
-@app.post("/todo/replace/{todo_jrnl}", status_code=200)
+@app.post(
+    "/todo/replace/{todo_jrnl}",
+    summary="Replace",
+    response_description="Replace one todo",
+    tags=[Tags.todoapp],
+    status_code=200
+)
 async def replace_todo(todo_jrnl: str, q: int, ent: TodoIn, response: Response):
     if not os.path.exists(todo_jrnl):
         response.status_code = 404
@@ -132,7 +181,14 @@ async def replace_todo(todo_jrnl: str, q: int, ent: TodoIn, response: Response):
     return {"Replaced todo with index": q, "to": ent, "in journal": todo_jrnl}
 
 
-@app.post("/todo/properites_info", response_model=TodoOut, response_model_include=["ID", "date_created"])
+@app.post(
+    "/todo/properites_info",
+    summary="Properties",
+    response_description="Metadata about todos",
+    tags=[Tags.todoapp],
+    response_model=TodoOut,
+    response_model_include=["ID", "date_created"]
+)
 async def info_of_todo(todo_in: TodoIn):
     if todo_in.text is None:
         todo_in.text = "There was no text"
@@ -141,6 +197,11 @@ async def info_of_todo(todo_in: TodoIn):
     return todo_in
 
 
-@app.post("/uploadfiles/")
+@app.post(
+    "/uploadfiles/",
+    summary="Upload files",
+    response_description="Like Dropbox, but without box",
+    tags=[Tags.random]
+)
 async def create_upload_files(files: list[UploadFile]):
     return {"filenames": [file.filename for file in files]}
